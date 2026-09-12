@@ -1,0 +1,55 @@
+# Demo workflow: checks out the repo, runs the SR SAST scan on ./src, uploads the SARIF to
+# GitHub Code Scanning (Security tab - requires GitHub Advanced Security on private repos, always
+# available on public repos), and publishes the HTML report + raw results as a downloadable
+# artifact for the full graphical drill-down.
+name: SR SAST Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write # required by upload-sarif
+
+jobs:
+  sr-sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SR SAST scan
+        id: sr-sast
+        # Referencing the published GHCR image directly (no action.yml needed for a raw Docker
+        # action reference); in a real deployment this would instead be a versioned
+        # uses: security-reviewer/sr-sast-action@v1 published action.
+        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.0
+        continue-on-error: true # let the follow-up steps run even on FAILURE/UNSTABLE
+        with:
+          application: "MyApp"
+          version: ${{ github.sha }}
+          path: "./src"
+          generate_reports: "false"
+          threshold_fail_blocker: "0"
+          threshold_unstable_critical: "0"
+          continue_on_unstable: "true"
+
+      - name: Upload SARIF to Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.sr-sast.outputs.sarif-path }}
+
+      - name: Upload HTML report + raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sr-sast-report
+          path: |
+            ${{ steps.sr-sast.outputs.html-path }}
+            ${{ steps.sr-sast.outputs.results-dir }}
+
+      - name: Fail the job if the scan itself failed
+        if: steps.sr-sast.outputs.verdict == 'FAILURE'
+        run: exit 1
