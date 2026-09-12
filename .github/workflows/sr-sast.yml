@@ -24,7 +24,7 @@ jobs:
         # Referencing the published GHCR image directly (no action.yml needed for a raw Docker
         # action reference); in a real deployment this would instead be a versioned
         # uses: security-reviewer/sr-sast-action@v1 published action.
-        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.1
+        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.2
         continue-on-error: true # let the follow-up steps run even on FAILURE/UNSTABLE
         with:
           application: "MyApp"
