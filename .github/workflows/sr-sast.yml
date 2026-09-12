@@ -1,7 +1,7 @@
 # Demo workflow: checks out the repo, runs the SR SAST scan on ./src, uploads the SARIF to
 # GitHub Code Scanning (Security tab - requires GitHub Advanced Security on private repos, always
-# available on public repos), and publishes the HTML report + raw results as a downloadable
-# artifact for the full graphical drill-down.
+# available on public repos), and publishes the HTML report, raw results AND the official
+# SRReport PDF/DOC/XLS documents as a downloadable artifact for the full graphical drill-down.
 name: SR SAST Scan
 
 on:
@@ -21,16 +21,16 @@ jobs:
 
       - name: SR SAST scan
         id: sr-sast
-        # Referencing the published GHCR image directly (no action.yml needed for a raw Docker
-        # action reference); in a real deployment this would instead be a versioned
-        # uses: security-reviewer/sr-sast-action@v1 published action.
-        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.2
+        # Referencing this same repo's action by relative path for the demo; in a real deployment
+        # reference the published action instead, e.g. uses: security-reviewer/sr-sast-action@v1
+        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.3
         continue-on-error: true # let the follow-up steps run even on FAILURE/UNSTABLE
         with:
           application: "MyApp"
           version: ${{ github.sha }}
           path: "./src"
-          generate_reports: "false"
+          generate_reports: "true"
+          report_types: "det,deadcode,sqale"
           threshold_fail_blocker: "0"
           threshold_unstable_critical: "0"
           continue_on_unstable: "true"
@@ -41,7 +41,7 @@ jobs:
         with:
           sarif_file: ${{ steps.sr-sast.outputs.sarif-path }}
 
-      - name: Upload HTML report + raw results
+      - name: Upload HTML report + raw results + official PDF reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -49,6 +49,7 @@ jobs:
           path: |
             ${{ steps.sr-sast.outputs.html-path }}
             ${{ steps.sr-sast.outputs.results-dir }}
+            ${{ steps.sr-sast.outputs.reports-dir }}
 
       - name: Fail the job if the scan itself failed
         if: steps.sr-sast.outputs.verdict == 'FAILURE'
