@@ -24,7 +24,7 @@ jobs:
         # Referencing the published GHCR image directly (no action.yml needed for a raw Docker
         # action reference); in a real deployment this would instead be a versioned
         # uses: security-reviewer/sr-sast-action@v1 published action.
-        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.0
+        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.1
         continue-on-error: true # let the follow-up steps run even on FAILURE/UNSTABLE
         with:
           application: "MyApp"
@@ -34,21 +34,6 @@ jobs:
           threshold_fail_blocker: "0"
           threshold_unstable_critical: "0"
           continue_on_unstable: "true"
-
-      - name: Diagnostic - inspect workspace from the host
-        if: always()
-        run: |
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          echo "outputs.sarif-path=${{ steps.sr-sast.outputs.sarif-path }}"
-          echo "outputs.html-path=${{ steps.sr-sast.outputs.html-path }}"
-          echo "outputs.results-dir=${{ steps.sr-sast.outputs.results-dir }}"
-          echo "outputs.verdict=${{ steps.sr-sast.outputs.verdict }}"
-          ls -la "$GITHUB_WORKSPACE" || true
-          ls -la "$GITHUB_WORKSPACE/sr-sast-out" || true
-          find "$GITHUB_WORKSPACE" -maxdepth 3 || true
-          whoami
-          id
-          stat "$GITHUB_WORKSPACE" || true
 
       - name: Upload SARIF to Code Scanning
         if: always()
