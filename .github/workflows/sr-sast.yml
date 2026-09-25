@@ -34,6 +34,13 @@ jobs:
           threshold_fail_blocker: "0"
           threshold_unstable_critical: "0"
           continue_on_unstable: "true"
+          sonar_report: "true"
+          ticket_system: "jira"
+          ticket_url: "http://172.17.0.1:18780"
+          ticket_user: "ci@example.com"
+          ticket_token: "demo-ticket-token"
+          ticket_project: "SEC"
+          ticket_min_severity: "Major"
 
       - name: Upload SARIF to Code Scanning
         if: always()
