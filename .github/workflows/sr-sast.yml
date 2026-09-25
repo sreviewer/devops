@@ -19,6 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Stand-in for Jira so "create ticket" can be exercised without a real tracker.
+      - name: Start mock Jira
+        run: |
+          setsid python3 .github/mockjira.py 18780 "$RUNNER_TEMP/mock-jira.log" 0.0.0.0 >/dev/null 2>&1 < /dev/null &
+          sleep 2
+          ss -ltn | grep 18780
+
       - name: SR SAST scan
         id: sr-sast
         # Referencing this same repo's action by relative path for the demo; in a real deployment
