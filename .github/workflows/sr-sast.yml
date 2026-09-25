@@ -23,7 +23,7 @@ jobs:
         id: sr-sast
         # Referencing this same repo's action by relative path for the demo; in a real deployment
         # reference the published action instead, e.g. uses: security-reviewer/sr-sast-action@v1
-        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.4
+        uses: docker://ghcr.io/sreviewer/sr-sast-action:1.0.5
         continue-on-error: true # let the follow-up steps run even on FAILURE/UNSTABLE
         with:
           application: "MyApp"
@@ -50,6 +50,10 @@ jobs:
             ${{ steps.sr-sast.outputs.html-path }}
             ${{ steps.sr-sast.outputs.results-dir }}
             ${{ steps.sr-sast.outputs.reports-dir }}
+
+      - name: Show what the mock Jira received
+        if: always()
+        run: cat "$RUNNER_TEMP/mock-jira.log" || true
 
       - name: Fail the job if the scan itself failed
         if: steps.sr-sast.outputs.verdict == 'FAILURE'
